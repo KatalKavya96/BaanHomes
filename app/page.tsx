@@ -43,7 +43,7 @@ export default function Home() {
   const [checkin, setCheckin] = useState("2026-08-20");
   const [checkout, setCheckout] = useState("2026-08-22");
   const [guests, setGuests] = useState("2");
-  const [selectedRoom, setSelectedRoom] = useState(roomOptions[0].name);
+  const [selectedRoom, setSelectedRoom] = useState<string>(roomOptions[0].name);
 
   const nights = useMemo(() => {
     const start = new Date(checkin).getTime();
