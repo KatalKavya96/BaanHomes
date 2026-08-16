@@ -38,12 +38,19 @@ function formatDate(value: string) {
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(1);
   const [openFaq, setOpenFaq] = useState(0);
   const [checkin, setCheckin] = useState("2026-08-20");
   const [checkout, setCheckout] = useState("2026-08-22");
   const [guests, setGuests] = useState("2");
   const [selectedRoom, setSelectedRoom] = useState<string>(roomOptions[0].name);
+  const [stayType, setStayType] = useState("All");
+  const [minGuests, setMinGuests] = useState(0);
+  const [sort, setSort] = useState("Recommended");
+  const [breakfastOnly, setBreakfastOnly] = useState(false);
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState("Card");
 
   const nights = useMemo(() => {
     const start = new Date(checkin).getTime();
@@ -53,11 +60,11 @@ export default function Home() {
 
   function submitBooking(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(true);
+    setCheckoutStep(2);
   }
 
   function openBooking() {
-    setSubmitted(false);
+    setCheckoutStep(1);
     setModalOpen(true);
     setMenuOpen(false);
   }
@@ -68,6 +75,24 @@ export default function Home() {
   }
 
   const activeRoom = roomOptions.find((room) => room.name === selectedRoom) ?? roomOptions[0];
+  const filteredRooms = useMemo(() => {
+    const list = roomOptions.filter((room) =>
+      (stayType === "All" || room.type === stayType) &&
+      (!minGuests || room.guests >= minGuests) &&
+      (!breakfastOnly || room.features.some((feature) => feature.toLowerCase().includes("breakfast"))) &&
+      (!favoritesOnly || wishlist.includes(room.slug))
+    );
+    return [...list].sort((a, b) => sort === "Price: low to high" ? a.price - b.price : sort === "Price: high to low" ? b.price - a.price : b.rating - a.rating);
+  }, [stayType, minGuests, breakfastOnly, favoritesOnly, wishlist, sort]);
+
+  function toggleWishlist(slug: string) {
+    setWishlist((current) => current.includes(slug) ? current.filter((item) => item !== slug) : [...current, slug]);
+  }
+
+  function completePayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setCheckoutStep(3);
+  }
 
   return (
     <main className="home-page">
@@ -77,11 +102,11 @@ export default function Home() {
           <span><strong>BAAN HOMES</strong><small>STAY A LITTLE LONGER</small></span>
         </a>
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
-          <a href="/about">About</a>
-          <a href="/rooms">Rooms &amp; Rates</a>
+          <a href="#stay" onClick={() => setMenuOpen(false)}>About</a>
+          <a href="#rooms" onClick={() => setMenuOpen(false)}>Rooms &amp; Rates</a>
           <a href="#amenities" onClick={() => setMenuOpen(false)}>Amenities</a>
-          <a href="/experiences">Explore Shimla</a>
-          <a href="/contact">Contact</a>
+          <a href="#experiences" onClick={() => setMenuOpen(false)}>Explore Shimla</a>
+          <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
           <a className="nav-phone" href="tel:+917018305160">Call 7018305160</a>
         </nav>
         <button className="book-btn desktop-book" onClick={openBooking}>Book your stay</button>
@@ -140,11 +165,13 @@ export default function Home() {
           <div><p className="eyebrow">AVAILABLE FOR YOUR DATES</p><h2>Choose your<br /><em>Baan Homes stay.</em></h2></div>
           <div className="search-summary"><span>{formatDate(checkin)} → {formatDate(checkout)}</span><b>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</b><button onClick={() => document.querySelector(".booking-bar")?.scrollIntoView({behavior:"smooth"})}>Change search</button></div>
         </div>
-        <div className="availability-note"><span>✓</span><div><b>Rooms are available</b><small>Free cancellation up to 7 days before check-in</small></div></div>
-        <div className="room-options">
-          {roomOptions.map((room) => (
+        <div className="home-booking-toolbar"><div><b>{filteredRooms.length} stay options</b><span>Prices include direct-booking benefits</span></div><button className={favoritesOnly ? "active" : ""} onClick={() => setFavoritesOnly(!favoritesOnly)}>♡ Wishlist <b>{wishlist.length}</b></button><label>Sort by <select value={sort} onChange={(e)=>setSort(e.target.value)}><option>Recommended</option><option>Price: low to high</option><option>Price: high to low</option></select></label></div>
+        <div className="home-booking-layout">
+          <aside className="home-filters"><div className="home-filter-title"><h3>Filters</h3><button onClick={()=>{setStayType("All");setMinGuests(0);setBreakfastOnly(false);setFavoritesOnly(false)}}>Clear all</button></div><div className="home-filter-group"><h4>Stay type</h4>{["All","Room","Suite","Entire Home"].map(type=><button key={type} className={stayType===type?"selected":""} onClick={()=>setStayType(type)}>{type}</button>)}</div><div className="home-filter-group"><h4>Guests</h4><div>{[0,2,3,4,5,6].map(number=><button key={number} className={minGuests===number?"selected":""} onClick={()=>setMinGuests(number)}>{number || "Any"}</button>)}</div></div><div className="home-filter-group"><h4>Included</h4><label><input type="checkbox" checked={breakfastOnly} onChange={e=>setBreakfastOnly(e.target.checked)}/> Breakfast included</label><label><input type="checkbox"/> Valley view</label><label><input type="checkbox"/> Private outdoor space</label></div><div className="home-filter-group"><h4>Price per night</h4><p>₹5,000 — ₹20,000+</p><input aria-label="Maximum price" type="range" min="5000" max="20000" defaultValue="20000"/></div></aside>
+          <div className="home-room-results"><div className="availability-note"><span>✓</span><div><b>Rooms are available</b><small>Free cancellation up to 7 days before check-in</small></div></div><div className="room-options">
+          {filteredRooms.map((room) => (
             <article className="stay-card" key={room.name}>
-              <a className="stay-card-image" href={`/rooms/${room.slug}`} style={{backgroundImage:`url(${room.image})`}}><span className="stay-badge">{room.badge}</span><span className="stay-heart">♡</span><span className="stay-count">● ● ○</span></a>
+              <button className="stay-card-image" onClick={()=>chooseRoom(room.name)} style={{backgroundImage:`url(${room.image})`}} aria-label={`Select ${room.name}`}><span className="stay-badge">{room.badge}</span><span className="stay-count">● ● ○</span></button><button className={wishlist.includes(room.slug)?"stay-heart saved":"stay-heart"} onClick={()=>toggleWishlist(room.slug)} aria-label={wishlist.includes(room.slug)?`Remove ${room.name} from wishlist`:`Add ${room.name} to wishlist`}>{wishlist.includes(room.slug)?"♥":"♡"}</button>
               <div className="stay-card-content">
                 <div className="stay-title"><div><h3>{room.name}</h3><p>Baan Homes, Shimla</p></div><b>★ {room.rating}</b></div>
                 <div className="stay-facts"><span>{room.guests} guests</span><span>{room.bedrooms} bedroom{room.bedrooms > 1 ? "s" : ""}</span><span>{room.bathrooms} bath{room.bathrooms > 1 ? "s" : ""}</span></div>
@@ -154,8 +181,8 @@ export default function Home() {
               <div className="stay-offer">✦ Direct booking benefit · Personal confirmation</div>
             </article>
           ))}
+          </div>{filteredRooms.length===0&&<div className="home-empty"><span>♡</span><h3>No rooms found</h3><p>Try clearing a filter or add rooms to your wishlist.</p><button onClick={()=>{setStayType("All");setMinGuests(0);setBreakfastOnly(false);setFavoritesOnly(false)}}>Show all rooms</button></div>}</div>
         </div>
-        <a className="view-all-rooms" href="/rooms">View all rooms &amp; filters <span>→</span></a>
       </section>
 
       <section className="offer-strip">
@@ -199,7 +226,10 @@ export default function Home() {
 
       {modalOpen && <div className="modal-backdrop" onMouseDown={() => setModalOpen(false)}><div className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title" onMouseDown={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={() => setModalOpen(false)} aria-label="Close booking form">×</button>
-        {!submitted ? <><p className="eyebrow">DIRECT BOOKING</p><h2 id="booking-title">Plan your stay.</h2><p className="modal-copy">Share your details and our Baan Homes host will call you to confirm availability.</p><form onSubmit={submitBooking}><label>Stay option<select value={selectedRoom} onChange={(e)=>setSelectedRoom(e.target.value)}>{roomOptions.map((room)=><option key={room.name} value={room.name}>{room.name} — ₹{room.price.toLocaleString("en-IN")}/night</option>)}</select></label><div className="form-row"><label>Check-in<input required type="date" value={checkin} onChange={(e)=>setCheckin(e.target.value)} /></label><label>Check-out<input required type="date" min={checkin} value={checkout} onChange={(e)=>setCheckout(e.target.value)} /></label></div><div className="form-row"><label>Guests<select value={guests} onChange={(e)=>setGuests(e.target.value)}><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select></label><label>Phone number<input required type="tel" placeholder="Your mobile number" /></label></div><label>Full name<input required type="text" placeholder="Your name" /></label><div className="selected-summary"><img src={activeRoom.image} alt="" /><div><b>{activeRoom.name}</b><span>{activeRoom.bed} · Up to {activeRoom.guests} guests</span></div></div><div className="price-line"><span>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</span><b>₹{(activeRoom.price*nights).toLocaleString("en-IN")}</b></div><button className="submit-btn" type="submit">Request booking <span>→</span></button></form><a className="call-direct" href="tel:+917018305160">Or call +91 70183 05160</a></> : <div className="success"><span>✓</span><h2>Request received.</h2><p>Thanks! Our host will call you shortly to confirm your {selectedRoom} booking.</p><button className="submit-btn" onClick={()=>setModalOpen(false)}>Done</button></div>}
+        <div className="checkout-progress"><span className={checkoutStep>=1?"active":""}>1</span><i></i><span className={checkoutStep>=2?"active":""}>2</span><i></i><span className={checkoutStep>=3?"active":""}>3</span></div>
+        {checkoutStep===1 && <><p className="eyebrow">GUEST DETAILS</p><h2 id="booking-title">Plan your stay.</h2><p className="modal-copy">Choose your stay and add your details. Payment is simulated for this demo.</p><form onSubmit={submitBooking}><label>Stay option<select value={selectedRoom} onChange={(e)=>setSelectedRoom(e.target.value)}>{roomOptions.map((room)=><option key={room.name} value={room.name}>{room.name} — ₹{room.price.toLocaleString("en-IN")}/night</option>)}</select></label><div className="form-row"><label>Check-in<input required type="date" value={checkin} onChange={(e)=>setCheckin(e.target.value)} /></label><label>Check-out<input required type="date" min={checkin} value={checkout} onChange={(e)=>setCheckout(e.target.value)} /></label></div><div className="form-row"><label>Guests<select value={guests} onChange={(e)=>setGuests(e.target.value)}><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select></label><label>Phone number<input required type="tel" placeholder="Your mobile number" /></label></div><label>Full name<input required type="text" placeholder="Your name" /></label><label>Email<input required type="email" placeholder="you@example.com" /></label><div className="selected-summary"><img src={activeRoom.image} alt="" /><div><b>{activeRoom.name}</b><span>{activeRoom.bed} · Up to {activeRoom.guests} guests</span></div></div><div className="price-line"><span>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</span><b>₹{(activeRoom.price*nights).toLocaleString("en-IN")}</b></div><button className="submit-btn" type="submit">Continue to payment <span>→</span></button></form></>}
+        {checkoutStep===2 && <><p className="eyebrow">DUMMY PAYMENT</p><h2>Secure checkout.</h2><p className="demo-notice">Demo only — no real charge will be made.</p><div className="pay-methods">{["Card","UPI","Pay at property"].map(method=><button key={method} className={paymentMethod===method?"active":""} onClick={()=>setPaymentMethod(method)}>{method==="Card"?"▣":method==="UPI"?"◎":"⌂"}<span>{method}</span></button>)}</div><form onSubmit={completePayment}>{paymentMethod==="Card"&&<><label>Card number<input required inputMode="numeric" placeholder="4242 4242 4242 4242" maxLength={19}/></label><div className="form-row"><label>Expiry<input required placeholder="MM / YY"/></label><label>CVV<input required placeholder="123" maxLength={3}/></label></div><label>Name on card<input required placeholder="Your name"/></label></>}{paymentMethod==="UPI"&&<label>UPI ID<input required placeholder="name@bank"/></label>}{paymentMethod==="Pay at property"&&<div className="pay-later-copy">Reserve now and settle the amount directly with Baan Homes at check-in.</div>}<div className="payment-summary"><span>{activeRoom.name}<small>{nights} night{nights>1?"s":""} · {guests} guest{guests==="1"?"":"s"}</small></span><b>₹{(activeRoom.price*nights).toLocaleString("en-IN")}</b></div><button className="submit-btn" type="submit">{paymentMethod==="Pay at property"?"Confirm reservation":"Pay demo amount"} <span>→</span></button><button className="back-step" type="button" onClick={()=>setCheckoutStep(1)}>← Back to details</button></form></>}
+        {checkoutStep===3 && <div className="success"><span>✓</span><p className="eyebrow">BOOKING CONFIRMED</p><h2>You’re going to Shimla.</h2><p>Your demo booking for {selectedRoom} is confirmed. A sample itinerary has been prepared for {formatDate(checkin)}.</p><div className="confirmation-code"><small>CONFIRMATION</small><b>BAAN-{Math.floor(activeRoom.price/10)}-SH</b></div><button className="submit-btn" onClick={()=>setModalOpen(false)}>Done</button></div>}
       </div></div>}
     </main>
   );
