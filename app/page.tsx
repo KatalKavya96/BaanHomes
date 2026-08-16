@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { roomInventory } from "./rooms/data";
 
 const photos = {
   hero: "https://images.unsplash.com/photo-1601918774946-25832a4be0d6?auto=format&fit=crop&w=2200&q=90",
@@ -20,41 +21,7 @@ const amenities = [
   ["♨", "Hot water", "24-hour hot water for cozy mountain stays"],
 ];
 
-const roomOptions = [
-  {
-    name: "Valley View Deluxe",
-    image: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=85",
-    guests: 2,
-    bed: "1 king bed",
-    size: "320 sq ft",
-    price: 6500,
-    oldPrice: 7800,
-    badge: "Only 2 left",
-    features: ["Private balcony", "Valley view", "Breakfast included"],
-  },
-  {
-    name: "Garden Family Suite",
-    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
-    guests: 4,
-    bed: "1 king + 1 sofa bed",
-    size: "480 sq ft",
-    price: 8900,
-    oldPrice: 10500,
-    badge: "Family favourite",
-    features: ["Private sit-out", "Garden access", "Breakfast included"],
-  },
-  {
-    name: "Entire Baan Home",
-    image: "https://images.unsplash.com/photo-1601918774946-25832a4be0d6?auto=format&fit=crop&w=1200&q=85",
-    guests: 6,
-    bed: "3 bedrooms",
-    size: "Full property",
-    price: 18500,
-    oldPrice: 22000,
-    badge: "Best value",
-    features: ["Exclusive use", "Living & dining", "Breakfast for 6"],
-  },
-];
+const roomOptions = roomInventory;
 
 const faqs = [
   ["What are the check-in and check-out timings?", "Check-in is from 1:00 PM and check-out is by 11:00 AM. Early check-in is subject to availability."],
@@ -103,7 +70,7 @@ export default function Home() {
   const activeRoom = roomOptions.find((room) => room.name === selectedRoom) ?? roomOptions[0];
 
   return (
-    <main>
+    <main className="home-page">
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Baan Homes home">
           <span className="brand-mark">B</span>
@@ -143,6 +110,12 @@ export default function Home() {
         <button onClick={() => document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" })}>Search availability <span>→</span></button>
       </section>
 
+      <section className="home-offers" aria-label="Baan Homes offers">
+        <article><span>3=2</span><div><b>Stay a little longer</b><p>Stay 3 nights and enjoy breakfast for two on us.</p></div><a href="#rooms">Explore offer</a></article>
+        <article><span>10%</span><div><b>Family suite offer</b><p>Save 10% on selected weekday family stays.</p></div><a href="#rooms">View suites</a></article>
+        <article><span>✓</span><div><b>Book direct benefit</b><p>Personal assistance and our best available rate.</p></div><a href="tel:+917018305160">Call us</a></article>
+      </section>
+
       <section id="stay" className="intro section-pad">
         <div>
           <p className="eyebrow">WELCOME TO BAAN HOMES</p>
@@ -173,10 +146,10 @@ export default function Home() {
             <article className="option-card" key={room.name}>
               <div className="option-image" style={{backgroundImage:`url(${room.image})`}}><span>{room.badge}</span><button aria-label={`Save ${room.name}`}>♡</button></div>
               <div className="option-details">
-                <div className="option-title"><div><h3>{room.name}</h3><p>★ 4.9 · Exceptional</p></div><button className="mobile-select" onClick={() => chooseRoom(room.name)}>Select</button></div>
+                <div className="option-title"><div><h3>{room.name}</h3><p>★ {room.rating} · Exceptional</p></div><button className="mobile-select" onClick={() => chooseRoom(room.name)}>Select</button></div>
                 <div className="room-facts"><span>♙ Up to {room.guests} guests</span><span>▱ {room.bed}</span><span>↔ {room.size}</span></div>
                 <ul>{room.features.map((feature) => <li key={feature}>✓ {feature}</li>)}</ul>
-                <a href="#amenities">View room details</a>
+                <a href={`/rooms/${room.slug}`}>View room details</a>
               </div>
               <div className="option-price">
                 <small>PER NIGHT</small><del>₹{room.oldPrice.toLocaleString("en-IN")}</del><b>₹{room.price.toLocaleString("en-IN")}</b><span>+ taxes &amp; fees</span><p><strong>₹{(room.price*nights).toLocaleString("en-IN")}</strong> for {nights} night{nights > 1 ? "s" : ""}</p><button onClick={() => chooseRoom(room.name)}>Select room <span>→</span></button><em>Pay securely after confirmation</em>
