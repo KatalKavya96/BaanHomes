@@ -143,20 +143,19 @@ export default function Home() {
         <div className="availability-note"><span>✓</span><div><b>Rooms are available</b><small>Free cancellation up to 7 days before check-in</small></div></div>
         <div className="room-options">
           {roomOptions.map((room) => (
-            <article className="option-card" key={room.name}>
-              <div className="option-image" style={{backgroundImage:`url(${room.image})`}}><span>{room.badge}</span><button aria-label={`Save ${room.name}`}>♡</button></div>
-              <div className="option-details">
-                <div className="option-title"><div><h3>{room.name}</h3><p>★ {room.rating} · Exceptional</p></div><button className="mobile-select" onClick={() => chooseRoom(room.name)}>Select</button></div>
-                <div className="room-facts"><span>♙ Up to {room.guests} guests</span><span>▱ {room.bed}</span><span>↔ {room.size}</span></div>
-                <ul>{room.features.map((feature) => <li key={feature}>✓ {feature}</li>)}</ul>
-                <a href={`/rooms/${room.slug}`}>View room details</a>
+            <article className="stay-card" key={room.name}>
+              <a className="stay-card-image" href={`/rooms/${room.slug}`} style={{backgroundImage:`url(${room.image})`}}><span className="stay-badge">{room.badge}</span><span className="stay-heart">♡</span><span className="stay-count">● ● ○</span></a>
+              <div className="stay-card-content">
+                <div className="stay-title"><div><h3>{room.name}</h3><p>Baan Homes, Shimla</p></div><b>★ {room.rating}</b></div>
+                <div className="stay-facts"><span>{room.guests} guests</span><span>{room.bedrooms} bedroom{room.bedrooms > 1 ? "s" : ""}</span><span>{room.bathrooms} bath{room.bathrooms > 1 ? "s" : ""}</span></div>
+                <div className="stay-pills">{room.features.slice(0,3).map((feature) => <span key={feature}>{feature}</span>)}</div>
+                <div className="stay-price"><div><del>₹{room.oldPrice.toLocaleString("en-IN")}</del><b>₹{room.price.toLocaleString("en-IN")}</b><small> / night</small><p>₹{(room.price*nights).toLocaleString("en-IN")} for {nights} night{nights > 1 ? "s" : ""}</p></div><button onClick={() => chooseRoom(room.name)}>Book</button></div>
               </div>
-              <div className="option-price">
-                <small>PER NIGHT</small><del>₹{room.oldPrice.toLocaleString("en-IN")}</del><b>₹{room.price.toLocaleString("en-IN")}</b><span>+ taxes &amp; fees</span><p><strong>₹{(room.price*nights).toLocaleString("en-IN")}</strong> for {nights} night{nights > 1 ? "s" : ""}</p><button onClick={() => chooseRoom(room.name)}>Select room <span>→</span></button><em>Pay securely after confirmation</em>
-              </div>
+              <div className="stay-offer">✦ Direct booking benefit · Personal confirmation</div>
             </article>
           ))}
         </div>
+        <a className="view-all-rooms" href="/rooms">View all rooms &amp; filters <span>→</span></a>
       </section>
 
       <section className="offer-strip">
