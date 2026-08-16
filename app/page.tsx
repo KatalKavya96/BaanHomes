@@ -20,6 +20,42 @@ const amenities = [
   ["♨", "Hot water", "24-hour hot water for cozy mountain stays"],
 ];
 
+const roomOptions = [
+  {
+    name: "Valley View Deluxe",
+    image: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=1200&q=85",
+    guests: 2,
+    bed: "1 king bed",
+    size: "320 sq ft",
+    price: 6500,
+    oldPrice: 7800,
+    badge: "Only 2 left",
+    features: ["Private balcony", "Valley view", "Breakfast included"],
+  },
+  {
+    name: "Garden Family Suite",
+    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85",
+    guests: 4,
+    bed: "1 king + 1 sofa bed",
+    size: "480 sq ft",
+    price: 8900,
+    oldPrice: 10500,
+    badge: "Family favourite",
+    features: ["Private sit-out", "Garden access", "Breakfast included"],
+  },
+  {
+    name: "Entire Baan Home",
+    image: "https://images.unsplash.com/photo-1601918774946-25832a4be0d6?auto=format&fit=crop&w=1200&q=85",
+    guests: 6,
+    bed: "3 bedrooms",
+    size: "Full property",
+    price: 18500,
+    oldPrice: 22000,
+    badge: "Best value",
+    features: ["Exclusive use", "Living & dining", "Breakfast for 6"],
+  },
+];
+
 const faqs = [
   ["What are the check-in and check-out timings?", "Check-in is from 1:00 PM and check-out is by 11:00 AM. Early check-in is subject to availability."],
   ["Is parking available at Baan Homes?", "Yes, complimentary on-site parking is available for staying guests."],
@@ -40,6 +76,7 @@ export default function Home() {
   const [checkin, setCheckin] = useState("2026-08-20");
   const [checkout, setCheckout] = useState("2026-08-22");
   const [guests, setGuests] = useState("2");
+  const [selectedRoom, setSelectedRoom] = useState(roomOptions[0].name);
 
   const nights = useMemo(() => {
     const start = new Date(checkin).getTime();
@@ -58,6 +95,13 @@ export default function Home() {
     setMenuOpen(false);
   }
 
+  function chooseRoom(roomName: string) {
+    setSelectedRoom(roomName);
+    openBooking();
+  }
+
+  const activeRoom = roomOptions.find((room) => room.name === selectedRoom) ?? roomOptions[0];
+
   return (
     <main>
       <header className="site-header">
@@ -66,11 +110,11 @@ export default function Home() {
           <span><strong>BAAN HOMES</strong><small>STAY A LITTLE LONGER</small></span>
         </a>
         <nav className={menuOpen ? "nav open" : "nav"} aria-label="Main navigation">
-          <a href="#stay" onClick={() => setMenuOpen(false)}>The Stay</a>
-          <a href="#rooms" onClick={() => setMenuOpen(false)}>Rooms</a>
+          <a href="/about">About</a>
+          <a href="/rooms">Rooms &amp; Rates</a>
           <a href="#amenities" onClick={() => setMenuOpen(false)}>Amenities</a>
-          <a href="#experiences" onClick={() => setMenuOpen(false)}>Explore Shimla</a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a>
+          <a href="/experiences">Explore Shimla</a>
+          <a href="/contact">Contact</a>
           <a className="nav-phone" href="tel:+917018305160">Call 7018305160</a>
         </nav>
         <button className="book-btn desktop-book" onClick={openBooking}>Book your stay</button>
@@ -96,7 +140,7 @@ export default function Home() {
         <label><span>CHECK-IN</span><input type="date" value={checkin} onChange={(e) => setCheckin(e.target.value)} /><b>{formatDate(checkin)}</b></label>
         <label><span>CHECK-OUT</span><input type="date" value={checkout} min={checkin} onChange={(e) => setCheckout(e.target.value)} /><b>{formatDate(checkout)}</b></label>
         <label><span>GUESTS</span><select value={guests} onChange={(e) => setGuests(e.target.value)}><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select><b>{guests} guest{guests === "1" ? "" : "s"}</b></label>
-        <button onClick={openBooking}>Search availability <span>→</span></button>
+        <button onClick={() => document.getElementById("rooms")?.scrollIntoView({ behavior: "smooth" })}>Search availability <span>→</span></button>
       </section>
 
       <section id="stay" className="intro section-pad">
@@ -120,12 +164,25 @@ export default function Home() {
 
       <section id="rooms" className="rooms section-pad">
         <div className="section-head">
-          <div><p className="eyebrow">REST WELL</p><h2>Rooms made for<br /><em>unhurried mornings.</em></h2></div>
-          <p>Soft bedding, warm wood, private corners and windows that keep the hills close.</p>
+          <div><p className="eyebrow">AVAILABLE FOR YOUR DATES</p><h2>Choose your<br /><em>Baan Homes stay.</em></h2></div>
+          <div className="search-summary"><span>{formatDate(checkin)} → {formatDate(checkout)}</span><b>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</b><button onClick={() => document.querySelector(".booking-bar")?.scrollIntoView({behavior:"smooth"})}>Change search</button></div>
         </div>
-        <div className="room-grid">
-          <article className="room-card"><div className="room-image" style={{backgroundImage:`url(${photos.suite})`}}><span>Most loved</span></div><div className="room-info"><div><h3>Valley Suite</h3><p>King bed · En-suite bath · Valley view</p></div><button aria-label="View Valley Suite" onClick={openBooking}>↗</button></div></article>
-          <article className="room-card"><div className="room-image" style={{backgroundImage:`url(${photos.dining})`}}></div><div className="room-info"><div><h3>Garden Room</h3><p>Queen bed · Private sit-out · Garden access</p></div><button aria-label="View Garden Room" onClick={openBooking}>↗</button></div></article>
+        <div className="availability-note"><span>✓</span><div><b>Rooms are available</b><small>Free cancellation up to 7 days before check-in</small></div></div>
+        <div className="room-options">
+          {roomOptions.map((room) => (
+            <article className="option-card" key={room.name}>
+              <div className="option-image" style={{backgroundImage:`url(${room.image})`}}><span>{room.badge}</span><button aria-label={`Save ${room.name}`}>♡</button></div>
+              <div className="option-details">
+                <div className="option-title"><div><h3>{room.name}</h3><p>★ 4.9 · Exceptional</p></div><button className="mobile-select" onClick={() => chooseRoom(room.name)}>Select</button></div>
+                <div className="room-facts"><span>♙ Up to {room.guests} guests</span><span>▱ {room.bed}</span><span>↔ {room.size}</span></div>
+                <ul>{room.features.map((feature) => <li key={feature}>✓ {feature}</li>)}</ul>
+                <a href="#amenities">View room details</a>
+              </div>
+              <div className="option-price">
+                <small>PER NIGHT</small><del>₹{room.oldPrice.toLocaleString("en-IN")}</del><b>₹{room.price.toLocaleString("en-IN")}</b><span>+ taxes &amp; fees</span><p><strong>₹{(room.price*nights).toLocaleString("en-IN")}</strong> for {nights} night{nights > 1 ? "s" : ""}</p><button onClick={() => chooseRoom(room.name)}>Select room <span>→</span></button><em>Pay securely after confirmation</em>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -170,7 +227,7 @@ export default function Home() {
 
       {modalOpen && <div className="modal-backdrop" onMouseDown={() => setModalOpen(false)}><div className="booking-modal" role="dialog" aria-modal="true" aria-labelledby="booking-title" onMouseDown={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={() => setModalOpen(false)} aria-label="Close booking form">×</button>
-        {!submitted ? <><p className="eyebrow">DIRECT BOOKING</p><h2 id="booking-title">Plan your stay.</h2><p className="modal-copy">Share your details and our Baan Homes host will call you to confirm availability.</p><form onSubmit={submitBooking}><div className="form-row"><label>Check-in<input required type="date" value={checkin} onChange={(e)=>setCheckin(e.target.value)} /></label><label>Check-out<input required type="date" min={checkin} value={checkout} onChange={(e)=>setCheckout(e.target.value)} /></label></div><div className="form-row"><label>Guests<select value={guests} onChange={(e)=>setGuests(e.target.value)}><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select></label><label>Phone number<input required type="tel" placeholder="Your mobile number" /></label></div><label>Full name<input required type="text" placeholder="Your name" /></label><div className="price-line"><span>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</span><b>From ₹{(6500*nights).toLocaleString("en-IN")}</b></div><button className="submit-btn" type="submit">Request booking <span>→</span></button></form><a className="call-direct" href="tel:+917018305160">Or call +91 70183 05160</a></> : <div className="success"><span>✓</span><h2>Request received.</h2><p>Thanks! Our host will call you shortly to confirm your Baan Homes stay.</p><button className="submit-btn" onClick={()=>setModalOpen(false)}>Done</button></div>}
+        {!submitted ? <><p className="eyebrow">DIRECT BOOKING</p><h2 id="booking-title">Plan your stay.</h2><p className="modal-copy">Share your details and our Baan Homes host will call you to confirm availability.</p><form onSubmit={submitBooking}><label>Stay option<select value={selectedRoom} onChange={(e)=>setSelectedRoom(e.target.value)}>{roomOptions.map((room)=><option key={room.name} value={room.name}>{room.name} — ₹{room.price.toLocaleString("en-IN")}/night</option>)}</select></label><div className="form-row"><label>Check-in<input required type="date" value={checkin} onChange={(e)=>setCheckin(e.target.value)} /></label><label>Check-out<input required type="date" min={checkin} value={checkout} onChange={(e)=>setCheckout(e.target.value)} /></label></div><div className="form-row"><label>Guests<select value={guests} onChange={(e)=>setGuests(e.target.value)}><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option><option value="5">5 guests</option><option value="6">6 guests</option></select></label><label>Phone number<input required type="tel" placeholder="Your mobile number" /></label></div><label>Full name<input required type="text" placeholder="Your name" /></label><div className="selected-summary"><img src={activeRoom.image} alt="" /><div><b>{activeRoom.name}</b><span>{activeRoom.bed} · Up to {activeRoom.guests} guests</span></div></div><div className="price-line"><span>{nights} night{nights > 1 ? "s" : ""} · {guests} guest{guests === "1" ? "" : "s"}</span><b>₹{(activeRoom.price*nights).toLocaleString("en-IN")}</b></div><button className="submit-btn" type="submit">Request booking <span>→</span></button></form><a className="call-direct" href="tel:+917018305160">Or call +91 70183 05160</a></> : <div className="success"><span>✓</span><h2>Request received.</h2><p>Thanks! Our host will call you shortly to confirm your {selectedRoom} booking.</p><button className="submit-btn" onClick={()=>setModalOpen(false)}>Done</button></div>}
       </div></div>}
     </main>
   );
